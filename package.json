@@ -27,7 +27,7 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "babel lib --out-dir dist",
-    "lint": "eslint **/*.js",
+    "lint": "eslint lib/**/*.js",
     "audit": "nsp check --output summary",
     "missing": "npm ls --depth 1",
     "outdated": "npm outdated --depth 0",

@@ -1,20 +1,13 @@
-/**
- * @author    Martin Micunda {@link http://martinmicunda.com}
- * @copyright Copyright (c) 2016, Martin Micunda
- * @license   GPL-3.0
- */
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-
-var _config = require('./config');
-
-var _config2 = _interopRequireDefault(_config);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
+/**
+ * @author    Martin Micunda {@link http://martinmicunda.com}
+ * @copyright Copyright (c) 2016, Martin Micunda
+ * @license   GPL-3.0
+ */
 class Logger {
     constructor() {
         let level = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'INFO';
@@ -38,11 +31,6 @@ class Logger {
                 break;
             default:
                 this.levelValue = 100;
-        }
-
-        // Override all logs if testing with mocha
-        if (process.argv.join('').indexOf('mocha') > -1) {
-            this.levelValue = 100;
         }
     }
 
@@ -94,4 +82,4 @@ class Logger {
     }
 }
 
-exports.default = new Logger(_config2.default.loggerLevel);
+exports.default = new Logger(process.env.LOGGER_LEVEL);

@@ -7,19 +7,8 @@
  */
 'use strict';
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _redis = require('redis');
-
-var _redis2 = _interopRequireDefault(_redis);
-
-var _config = require('./config');
-
-var _config2 = _interopRequireDefault(_config);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+// import redis from 'redis';
+// import config from './config';
 
 // class RedisClient {
 //     constructor() {
@@ -86,4 +75,4 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 //
 // export default redisClient;
 
-exports.default = {};
+// export default {};
