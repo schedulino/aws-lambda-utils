@@ -43,6 +43,9 @@
     "missing"
   ],
   "dependencies": {
+    "joi": "8.0.5",
+    "boom": "4.2.0",
+    "node-uuid": "1.4.7",
     "aws-sdk": "2.6.9"
   },
   "devDependencies": {
