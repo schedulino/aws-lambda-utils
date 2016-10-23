@@ -18,10 +18,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/schedulino/schedulino-utils"
+    "url": "git+https://github.com/schedulino/schedulino-utils.git"
   },
   "bugs": {
-    "url": "https://github.com/schedulino/schedulino-utils"
+    "url": "https://github.com/schedulino/schedulino-utils/issues"
   },
   "homepage": "https://github.com/schedulino/schedulino-utils#readme",
   "main": "./dist/index.js",
