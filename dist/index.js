@@ -5,10 +5,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.utils = exports.logger = exports.lambda = exports.db = exports.config = undefined;
 
-var _dotenv = require('dotenv');
-
-var _dotenv2 = _interopRequireDefault(_dotenv);
-
 var _config = require('./config');
 
 var _config2 = _interopRequireDefault(_config);
@@ -33,7 +29,6 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-_dotenv2.default.config();
 exports.config = _config2.default;
 exports.db = _dynamo2.default;
 exports.lambda = _lambda2.default;

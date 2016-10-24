@@ -14,71 +14,57 @@ class Logger {
 
         this.level = level;
         switch (level) {
-            case 'TRACE':
+            case 'DEBUG':
                 this.levelValue = 0;
                 break;
-            case 'DEBUG':
+            case 'INFO':
                 this.levelValue = 1;
                 break;
-            case 'INFO':
+            case 'WARN':
                 this.levelValue = 2;
                 break;
-            case 'WARN':
-                this.levelValue = 3;
-                break;
             case 'ERROR':
-                this.levelValue = 4;
+                this.levelValue = 3;
                 break;
             default:
                 this.levelValue = 100;
         }
     }
 
-    trace() {
-        if (this.levelValue <= 0) {
-            var _console;
-
-            (_console = console).log.apply(_console, ['TRACE: '].concat(Array.prototype.slice.call(arguments)));
-        }
+    config(options) {
+        this.level = options.level;
     }
 
     debug() {
-        if (this.levelValue <= 1) {
-            var _console2;
+        if (this.levelValue <= 0) {
+            var _console;
 
-            (_console2 = console).log.apply(_console2, ['DEBUG: '].concat(Array.prototype.slice.call(arguments)));
+            (_console = console).log.apply(_console, ['DEBUG: '].concat(Array.prototype.slice.call(arguments)));
         }
     }
 
     info() {
-        if (this.levelValue <= 2) {
-            var _console3;
+        if (this.levelValue <= 1) {
+            var _console2;
 
-            (_console3 = console).info.apply(_console3, ['INFO: '].concat(Array.prototype.slice.call(arguments)));
+            (_console2 = console).info.apply(_console2, ['INFO: '].concat(Array.prototype.slice.call(arguments)));
         }
     }
 
     warn() {
-        if (this.levelValue <= 3) {
-            var _console4;
+        if (this.levelValue <= 2) {
+            var _console3;
 
-            (_console4 = console).warn.apply(_console4, ['WARN: '].concat(Array.prototype.slice.call(arguments)));
+            (_console3 = console).warn.apply(_console3, ['WARN: '].concat(Array.prototype.slice.call(arguments)));
         }
     }
 
     error() {
-        if (this.levelValue <= 4) {
-            var _console5;
+        if (this.levelValue <= 3) {
+            var _console4;
 
-            (_console5 = console).error.apply(_console5, ['ERROR: '].concat(Array.prototype.slice.call(arguments)));
+            (_console4 = console).error.apply(_console4, ['ERROR: '].concat(Array.prototype.slice.call(arguments)));
         }
-    }
-
-    newConsole(method) {
-        var fn = console[method].bind(console);
-        console[method] = () => {
-            fn.apply(console, [new Date().toISOString()].concat(arguments));
-        };
     }
 }
 

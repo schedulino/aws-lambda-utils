@@ -2,7 +2,6 @@ defaultErrorResponseTemplate: &DEFAULT_ERROR_RESPONSE_TEMPLATE $input.path("$.er
 default: &DEFAULT
   headers:
     Content-Type: "'application/json;charset=UTF-8'"
-  template: $input.path('$.body')
 defaultStatusCodes: &DEFAULT_STATUS_CODES
   200:
     pattern: '.*"statusCode":200.*'
