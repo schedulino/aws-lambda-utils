@@ -21,35 +21,13 @@ var _nodeUuid = require('node-uuid');
 
 var _nodeUuid2 = _interopRequireDefault(_nodeUuid);
 
-var _bluebird = require('bluebird');
-
-var _bluebird2 = _interopRequireDefault(_bluebird);
-
 var _logger = require('./logger');
 
 var _logger2 = _interopRequireDefault(_logger);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new _bluebird2.default(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return _bluebird2.default.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
-
-// import config from './config';
-
-// const dynamodbConfig = {
-//     region: config.dynamodb.region,
-//     endpoint: config.dynamodb.endpoint,
-//     apiVersion: config.dynamodb.apiVersion
-// };
-// this is require only for locale Dynamo
-// if(process.env.IS_OFFLINE) {
-//     dynamodbConfig.accessKeyId = config.dynamodb.accessKeyId;
-//     dynamodbConfig.secretAccessKey = config.dynamodb.secretAccessKey;
-// }
-// const db = new AWS.DynamoDB(dynamodbConfig);
-const db = new _awsSdk2.default.DynamoDB();
-const doc = new _awsSdk2.default.DynamoDB.DocumentClient({ service: db });
-_bluebird2.default.promisifyAll(Object.getPrototypeOf(db));
-_bluebird2.default.promisifyAll(Object.getPrototypeOf(doc));
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
 class Internals {
     projectionExpression() {
@@ -75,7 +53,7 @@ class Internals {
         return projectionExpression;
     }
 }
-let config = {};
+
 /**
  * An adapter class for dealing with a DynamoDB.
  *
@@ -84,16 +62,14 @@ let config = {};
 class DynamoDBAdapter extends Internals {
     constructor(tableName, schema) {
         super();
-        this.db = db;
-        this.doc = doc;
-        this.service = tableName;
-        this.tableName = `${ config.prefix }${ tableName }${ config.postfix }`;
+        this.db = new _awsSdk2.default.DynamoDB();
+        this.doc = new _awsSdk2.default.DynamoDB.DocumentClient({ service: this.db });
+        this.tableName = tableName;
         this.schema = schema;
     }
 
     static config(options) {
-        config = options;
-        _awsSdk2.default.config.update({ region: config.region });
+        _awsSdk2.default.config.update({ region: options.region });
     }
 
     static model(modelName, schema) {
@@ -108,11 +84,11 @@ class DynamoDBAdapter extends Internals {
     static listTables() {
         let params = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-        return db.listTablesAsync(params);
+        return db.listTables(params).promise();
     }
 
     createTable(params) {
-        return this.db.createTableAsync(params);
+        return this.db.createTable(params).promise();
     }
 
     /**
@@ -124,7 +100,7 @@ class DynamoDBAdapter extends Internals {
      * @returns {Object} promise
      */
     deleteTable(params) {
-        return this.db.deleteTableAsync(params);
+        return this.db.deleteTable(params).promise();
     }
 
     findOne(key) {
@@ -132,25 +108,25 @@ class DynamoDBAdapter extends Internals {
 
         let params = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         return _asyncToGenerator(function* () {
-            _logger2.default.debug(`SERVICE::${ _this.service } DB_ACTION::get TABLE::${ _this.tableName } ACCOUNT::${ key.accountId } ID::${ key.id }`);
+            _logger2.default.debug(`DB_ACTION::get TABLE::${ _this.tableName } ACCOUNT::${ key.accountId } ID::${ key.id }`);
             if (params.ProjectionExpression) {
                 params = Object.assign(params, _this.projectionExpression(params.ProjectionExpression));
             }
             params = _this.extendParams({ Key: key }, params);
 
             try {
-                const data = yield _this.doc.getAsync(params);
+                const data = yield _this.doc.get(params).promise();
                 // throw 404 if item doesn't exist
                 if (data.Item) {
                     return data.Item;
                 }
             } catch (error) {
-                _logger2.default.error(`SERVICE::${ _this.service } DB_ACTION::get TABLE::${ _this.tableName } ACCOUNT::${ key.accountId } ID::${ key.id }`, error.message);
+                _logger2.default.error(`DB_ACTION::get TABLE::${ _this.tableName } ACCOUNT::${ key.accountId } ID::${ key.id }`, error.message);
                 throw error;
             }
 
             const error = _this.handleError({ name: 'NotFound' });
-            _logger2.default.error(`SERVICE::${ _this.service } DB_ACTION::get TABLE::${ _this.tableName } ACCOUNT::${ key.accountId } ID::${ key.id }`, error.message);
+            _logger2.default.error(`DB_ACTION::get TABLE::${ _this.tableName } ACCOUNT::${ key.accountId } ID::${ key.id }`, error.message);
 
             throw error;
         })();
@@ -161,20 +137,20 @@ class DynamoDBAdapter extends Internals {
 
         let params = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         return _asyncToGenerator(function* () {
-            _logger2.default.debug(`SERVICE::${ _this2.service } DB_ACTION::query TABLE::${ _this2.tableName } ACCOUNT::${ params.ExpressionAttributeValues ? params.ExpressionAttributeValues[':accountId'] : '' }`);
+            _logger2.default.debug(`DB_ACTION::query TABLE::${ _this2.tableName } ACCOUNT::${ params.ExpressionAttributeValues ? params.ExpressionAttributeValues[':accountId'] : '' }`);
             if (params.ProjectionExpression) {
                 params = Object.assign(params, _this2.projectionExpression(params.ProjectionExpression));
             }
             params = _this2.extendParams(params);
 
             try {
-                const data = yield _this2.doc.queryAsync(params);
+                const data = yield _this2.doc.query(params).promise();
                 _logger2.default.debug('Count', data.Count);
                 _logger2.default.debug('ScannedCount', data.ScannedCount);
                 _logger2.default.debug('ConsumedCapacity', data.ConsumedCapacity);
                 return data.Items;
             } catch (error) {
-                _logger2.default.error(`SERVICE::${ _this2.service } DB_ACTION::query TABLE::${ _this2.tableName } ACCOUNT::${ params.ExpressionAttributeValues ? params.ExpressionAttributeValues[':accountId'] : '' }`, error.message);
+                _logger2.default.error(`DB_ACTION::query TABLE::${ _this2.tableName } ACCOUNT::${ params.ExpressionAttributeValues ? params.ExpressionAttributeValues[':accountId'] : '' }`, error.message);
                 throw error;
             }
         })();
@@ -186,7 +162,7 @@ class DynamoDBAdapter extends Internals {
         let id = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : _nodeUuid2.default.v1();
         let options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
         return _asyncToGenerator(function* () {
-            _logger2.default.debug(`SERVICE::${ _this3.service } DB_ACTION::create TABLE::${ _this3.tableName } ACCOUNT::${ item.accountId } ID::${ id }`);
+            _logger2.default.debug(`DB_ACTION::create TABLE::${ _this3.tableName } ACCOUNT::${ item.accountId } ID::${ id }`);
 
             if (_this3.schema.id) {
                 item.id = id;
@@ -204,7 +180,7 @@ class DynamoDBAdapter extends Internals {
             const params = _this3.extendParams({ Item: item }, options);
 
             try {
-                const data = yield _this3.doc.putAsync(params);
+                const data = yield _this3.doc.put(params).promise();
                 if (_this3.schema.id) {
                     data.id = item.id;
                 }
@@ -217,7 +193,7 @@ class DynamoDBAdapter extends Internals {
 
                 return data;
             } catch (error) {
-                _logger2.default.error(`SERVICE::${ _this3.service } DB_ACTION::create TABLE::${ _this3.tableName } ACCOUNT::${ item.accountId } ID::${ id }`, error.message);
+                _logger2.default.error(`DB_ACTION::create TABLE::${ _this3.tableName } ACCOUNT::${ item.accountId } ID::${ id }`, error.message);
                 throw error;
             }
         })();
@@ -228,7 +204,7 @@ class DynamoDBAdapter extends Internals {
 
         let params = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
         return _asyncToGenerator(function* () {
-            _logger2.default.debug(`SERVICE::${ _this4.service } DB_ACTION::update TABLE::${ _this4.tableName } ACCOUNT::${ key.accountId } ID::${ key.id }`);
+            _logger2.default.debug(`DB_ACTION::update TABLE::${ _this4.tableName } ACCOUNT::${ key.accountId } ID::${ key.id }`);
 
             if (_this4.schema.updated) {
                 item.updated = new Date().toISOString();
@@ -236,14 +212,14 @@ class DynamoDBAdapter extends Internals {
             params = _this4.extendParams({ Item: Object.assign(item, key) }, params);
 
             try {
-                const data = yield _this4.doc.putAsync(params);
+                const data = yield _this4.doc.put(params).promise();
                 if (_this4.schema.updated) {
                     data.updated = item.updated;
                 }
 
                 return data;
             } catch (error) {
-                _logger2.default.error(`SERVICE::${ _this4.service } DB_ACTION::update TABLE::${ _this4.tableName } ACCOUNT::${ key.accountId } ID::${ key.id }`, error.message);
+                _logger2.default.error(`DB_ACTION::update TABLE::${ _this4.tableName } ACCOUNT::${ key.accountId } ID::${ key.id }`, error.message);
                 throw _this4.handleError(error);
             }
         })();
@@ -254,7 +230,7 @@ class DynamoDBAdapter extends Internals {
 
         let params = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
         return _asyncToGenerator(function* () {
-            _logger2.default.debug(`SERVICE::${ _this5.service } DB_ACTION::updateAttributes TABLE::${ _this5.tableName } ACCOUNT::${ key.accountId } ID::${ key.id }`);
+            _logger2.default.debug(`DB_ACTION::updateAttributes TABLE::${ _this5.tableName } ACCOUNT::${ key.accountId } ID::${ key.id }`);
 
             if (_this5.schema.updated) {
                 item.updated = new Date().toISOString();
@@ -298,7 +274,7 @@ class DynamoDBAdapter extends Internals {
             params.UpdateExpression += UpdateExpressionSetAction + UpdateExpressionRemoveAction;
 
             try {
-                const data = yield _this5.doc.updateAsync(params);
+                const data = yield _this5.doc.update(params).promise();
                 if (_this5.schema.updated) {
                     data.updated = item.updated;
                 }
@@ -307,7 +283,7 @@ class DynamoDBAdapter extends Internals {
 
                 return data;
             } catch (error) {
-                _logger2.default.error(`SERVICE::${ _this5.service } DB_ACTION::updateAttributes TABLE::${ _this5.tableName } ACCOUNT::${ key.accountId } ID::${ key.id }`, error.message);
+                _logger2.default.error(`DB_ACTION::updateAttributes TABLE::${ _this5.tableName } ACCOUNT::${ key.accountId } ID::${ key.id }`, error.message);
                 throw _this5.handleError(error);
             }
         })();
@@ -317,14 +293,14 @@ class DynamoDBAdapter extends Internals {
         var _this6 = this;
 
         return _asyncToGenerator(function* () {
-            _logger2.default.debug(`SERVICE::${ _this6.service } DB_ACTION::delete TABLE::${ _this6.tableName } ACCOUNT::${ key.accountId } ID::${ key.id }`);
+            _logger2.default.debug(`DB_ACTION::delete TABLE::${ _this6.tableName } ACCOUNT::${ key.accountId } ID::${ key.id }`);
 
             const params = _this6.extendParams({ Key: key });
 
             try {
-                return _this6.doc.deleteAsync(params);
+                return _this6.doc.delete(params).promise();
             } catch (error) {
-                _logger2.default.error(`SERVICE::${ _this6.service } DB_ACTION::delete TABLE::${ _this6.tableName } ACCOUNT::${ item.accountId } ID::${ item.id }`, error.message);
+                _logger2.default.error(`DB_ACTION::delete TABLE::${ _this6.tableName } ACCOUNT::${ item.accountId } ID::${ item.id }`, error.message);
                 throw error;
             }
         })();
@@ -334,12 +310,12 @@ class DynamoDBAdapter extends Internals {
         var _this7 = this;
 
         return _asyncToGenerator(function* () {
-            _logger2.default.debug(`SERVICE::${ _this7.service } DB_ACTION::batchWrite TABLE::${ _this7.tableName } ACCOUNT::${ accountId }`);
+            _logger2.default.debug(`DB_ACTION::batchWrite TABLE::${ _this7.tableName } ACCOUNT::${ accountId }`);
 
             try {
-                return _this7.doc.batchWriteAsync(params);
+                return _this7.doc.batchWrite(params).promise();
             } catch (error) {
-                _logger2.default.error(`SERVICE::${ _this7.service } DB_ACTION::batchWrite TABLE::${ _this7.tableName } ACCOUNT::${ accountId }`, error.message);
+                _logger2.default.error(`DB_ACTION::batchWrite TABLE::${ _this7.tableName } ACCOUNT::${ accountId }`, error.message);
                 throw error;
             }
         })();
@@ -357,16 +333,16 @@ class DynamoDBAdapter extends Internals {
 
         let params = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         return _asyncToGenerator(function* () {
-            _logger2.default.debug(`SERVICE::${ _this8.service } DB_ACTION::scan TABLE::${ _this8.tableName }`);
+            _logger2.default.debug(`DB_ACTION::scan TABLE::${ _this8.tableName }`);
 
             params = _this8.extendParams(params);
 
             try {
-                const data = yield _this8.doc.scanAsync(params);
+                const data = yield _this8.doc.scan(params).promise();
 
                 return data.Items;
             } catch (error) {
-                _logger2.default.error(`SERVICE::${ _this8.service } DB_ACTION::scan TABLE::${ _this8.tableName }`, error.message);
+                _logger2.default.error(`DB_ACTION::scan TABLE::${ _this8.tableName }`, error.message);
                 throw error;
             }
         })();

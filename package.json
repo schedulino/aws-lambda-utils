@@ -45,7 +45,6 @@
   "dependencies": {
     "joi": "8.0.5",
     "boom": "4.2.0",
-    "bluebird": "3.4.6",
     "node-uuid": "1.4.7",
     "aws-sdk": "2.6.9"
   },
