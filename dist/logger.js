@@ -4,35 +4,52 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 /**
- * @author    Martin Micunda {@link http://martinmicunda.com}
- * @copyright Copyright (c) 2016, Martin Micunda
- * @license   GPL-3.0
+ * @author    Martin Micunda {@link https://schedulino.com}
+ * @copyright Copyright (c) 2016, Schedulino ltd.
+ * @license   MIT
+ *
+ * The simple lambda logger that add the log level prefix for easy searching in CloudWatch
+ * By binding the log level as a prefix, we can give the different log levels actual meaning in the context of cloudwatch
+ * Export a `Mailer` for sending e-mails.
+ *
+ * @module @schedulino/lambda-logger
+ * @example
+ *  ```js
+ *      import logger from '@schedulino/lambda-logger';
+ *      logger.config({ level: 'DEBUG' });
+ *
+ *      logger.info('Hi');
+ *  ```
  */
 class Logger {
     constructor() {
         let level = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'INFO';
 
-        this.level = level;
+        this.levelValue = this.getLevelValue(level);
+    }
+
+    getLevelValue(level) {
+        let levelValue = 100;
         switch (level) {
             case 'DEBUG':
-                this.levelValue = 0;
+                levelValue = 0;
                 break;
             case 'INFO':
-                this.levelValue = 1;
+                levelValue = 1;
                 break;
             case 'WARN':
-                this.levelValue = 2;
+                levelValue = 2;
                 break;
             case 'ERROR':
-                this.levelValue = 3;
+                levelValue = 3;
                 break;
-            default:
-                this.levelValue = 100;
         }
+
+        return levelValue;
     }
 
     config(options) {
-        this.level = options.level;
+        this.levelValue = this.getLevelValue(options.level);
     }
 
     debug() {

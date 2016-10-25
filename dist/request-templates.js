@@ -28,7 +28,7 @@ function getDefaultJsonRequestTemplate(cmd) {
           "query": $loop,
           
           #set( $map = $input.params().path )
-          "path": $loop,
+          "params": $loop,
           
           #set( $map = $context.identity )
           "identity": $loop,

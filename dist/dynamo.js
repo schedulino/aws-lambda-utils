@@ -29,25 +29,24 @@ var _logger = require('./logger');
 
 var _logger2 = _interopRequireDefault(_logger);
 
-var _config = require('./config');
-
-var _config2 = _interopRequireDefault(_config);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new _bluebird2.default(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return _bluebird2.default.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
-const dynamodbConfig = {
-    region: _config2.default.dynamodb.region,
-    endpoint: _config2.default.dynamodb.endpoint,
-    apiVersion: _config2.default.dynamodb.apiVersion
-};
+// import config from './config';
+
+// const dynamodbConfig = {
+//     region: config.dynamodb.region,
+//     endpoint: config.dynamodb.endpoint,
+//     apiVersion: config.dynamodb.apiVersion
+// };
 // this is require only for locale Dynamo
-if (process.env.IS_OFFLINE) {
-    dynamodbConfig.accessKeyId = _config2.default.dynamodb.accessKeyId;
-    dynamodbConfig.secretAccessKey = _config2.default.dynamodb.secretAccessKey;
-}
-const db = new _awsSdk2.default.DynamoDB(dynamodbConfig);
+// if(process.env.IS_OFFLINE) {
+//     dynamodbConfig.accessKeyId = config.dynamodb.accessKeyId;
+//     dynamodbConfig.secretAccessKey = config.dynamodb.secretAccessKey;
+// }
+// const db = new AWS.DynamoDB(dynamodbConfig);
+const db = new _awsSdk2.default.DynamoDB();
 const doc = new _awsSdk2.default.DynamoDB.DocumentClient({ service: db });
 _bluebird2.default.promisifyAll(Object.getPrototypeOf(db));
 _bluebird2.default.promisifyAll(Object.getPrototypeOf(doc));
@@ -76,7 +75,7 @@ class Internals {
         return projectionExpression;
     }
 }
-
+let config = {};
 /**
  * An adapter class for dealing with a DynamoDB.
  *
@@ -88,8 +87,13 @@ class DynamoDBAdapter extends Internals {
         this.db = db;
         this.doc = doc;
         this.service = tableName;
-        this.tableName = `${ _config2.default.dynamodb.prefix }${ tableName }${ _config2.default.dynamodb.postfix }`;
+        this.tableName = `${ config.prefix }${ tableName }${ config.postfix }`;
         this.schema = schema;
+    }
+
+    static config(options) {
+        config = options;
+        _awsSdk2.default.config.update({ region: config.region });
     }
 
     static model(modelName, schema) {
