@@ -26,7 +26,7 @@
   "homepage": "https://github.com/schedulino/schedulino-utils#readme",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "babel lib --out-dir dist",
+    "build": "rimraf dist/* && babel lib --out-dir dist",
     "lint": "eslint lib/**/*.js",
     "audit": "nsp check --output summary",
     "missing": "npm ls --depth 1",
@@ -49,6 +49,7 @@
   },
   "devDependencies": {
     "nsp": "2.6.2",
+    "rimraf": "2.5.4",
     "pre-commit": "1.1.3",
     "eslint": "3.8.1",
     "eslint-loader": "1.6.0",
