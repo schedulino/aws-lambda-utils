@@ -44,8 +44,7 @@
   ],
   "dependencies": {
     "joi": "8.0.5",
-    "boom": "4.2.0",
-    "aws-sdk": "2.6.9"
+    "boom": "4.2.0"
   },
   "devDependencies": {
     "nsp": "2.6.2",
