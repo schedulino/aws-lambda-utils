@@ -26,8 +26,8 @@
   "homepage": "https://github.com/schedulino/schedulino-utils#readme",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "rimraf dist/* && babel lib --out-dir dist",
     "lint": "eslint lib/**/*.js",
+    "build": "rimraf dist/* && npm run lint && babel lib --out-dir dist",
     "audit": "nsp check --output summary",
     "missing": "npm ls --depth 1",
     "outdated": "npm outdated --depth 0",
@@ -44,7 +44,8 @@
   ],
   "dependencies": {
     "joi": "8.0.5",
-    "boom": "4.2.0"
+    "boom": "4.2.0",
+    "@schedulino/lambda-logger": "^0.0.11"
   },
   "devDependencies": {
     "nsp": "2.6.2",

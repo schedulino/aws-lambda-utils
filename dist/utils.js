@@ -1,8 +1,3 @@
-/**
- * @author    Martin Micunda {@link http://martinmicunda.com}
- * @copyright Copyright (c) 2016, Martin Micunda
- * @license   GPL-3.0
- */
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -37,21 +32,28 @@ var _boom = require('boom');
 
 var _boom2 = _interopRequireDefault(_boom);
 
+var _lambdaLogger = require('@schedulino/lambda-logger');
+
+var _lambdaLogger2 = _interopRequireDefault(_lambdaLogger);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; } /**
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                            * @author    Martin Micunda {@link http://martinmicunda.com}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                            * @copyright Copyright (c) 2016, Martin Micunda
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                            * @license   GPL-3.0
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                            */
+
 
 // this is custom app error handler
 function handleError(error) {
     if (error.isBoom) {
         error = error.output.payload;
+    } else if (error instanceof Error) {
+        _lambdaLogger2.default.error('APPLICATION EXCEPTION', error.stack);
+        error = _boom2.default.wrap(error, error.statusCode, error.message).output.payload;
     } else {
-        if (error instanceof Error) {
-            console.error('APPLICATION EXCEPTION', error.stack);
-            error = _boom2.default.wrap(error, error.statusCode, error.message).output.payload;
-        } else {
-            error = _boom2.default.badImplementation().output.payload;
-        }
+        error = _boom2.default.badImplementation().output.payload;
     }
 
     return JSON.stringify(error);
@@ -68,7 +70,7 @@ function handleError(error) {
 function validateInput(event, validate) {
     const props = Object.keys(validate);
 
-    for (let i = 0; i < props.length; ++i) {
+    for (let i = 0; i < props.length; i += 1) {
         const prop = props[i];
         const error = _joi2.default.validate(event[prop], validate[prop]).error;
 
@@ -81,6 +83,7 @@ function validateInput(event, validate) {
 function handleUnrecognizedOperation(event, context) {
     context.fail(handleError(_boom2.default.badRequest(`Unrecognized action command ${ event.operation }`)));
 }
+
 exports.respond = respond;
 exports.handleUnrecognizedOperation = handleUnrecognizedOperation;
 exports.handleError = handleError;
