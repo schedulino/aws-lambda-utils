@@ -29,7 +29,6 @@
     "lint": "eslint lib/**/*.js",
     "build": "rimraf dist/* && npm run lint && babel lib --out-dir dist",
     "audit": "nsp check --output summary",
-    "missing": "npm ls --depth 1",
     "outdated": "npm outdated --depth 0",
     "prepush": "npm shrinkwrap",
     "pretest": "npm run lint",
@@ -39,8 +38,7 @@
   "pre-commit": [
     "precommit-msg",
     "lint",
-    "audit",
-    "missing"
+    "audit"
   ],
   "dependencies": {
     "joi": "8.0.5",
