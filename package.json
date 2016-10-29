@@ -1,7 +1,7 @@
 {
-  "name": "@schedulino/lambda-utils",
+  "name": "schedulino-utils",
   "version": "0.0.1",
-  "description": "Schedulino lambda utilities.",
+  "description": "Schedulino project utilities.",
   "license": "GPL-3.0",
   "private": true,
   "author": {
