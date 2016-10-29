@@ -50,8 +50,17 @@ function handleError(error) {
     if (error.isBoom) {
         error = error.output.payload;
     } else if (error instanceof Error) {
-        _lambdaLogger2.default.error('APPLICATION EXCEPTION', error.stack);
-        error = _boom2.default.wrap(error, error.statusCode, error.message).output.payload;
+        try {
+            // if the error comes from another invoked-lambda we need to
+            // parse this error object however if the error was throw somewhere
+            // in the function e.g. exception it will contains string instead
+            // of JSON object so we handle this error in catch block
+            error = JSON.parse(error.message);
+            error = _boom2.default.create(error.statusCode, error.message).output.payload;
+        } catch (err) {
+            _lambdaLogger2.default.error('APPLICATION EXCEPTION', error.stack);
+            error = _boom2.default.badImplementation(error.message).output.payload;
+        }
     } else {
         error = _boom2.default.badImplementation().output.payload;
     }
