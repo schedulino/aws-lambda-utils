@@ -57,7 +57,7 @@ function handleError(error) {
             // of JSON object so we handle this error in catch block
             error = JSON.parse(error.message);
             error = _boom2.default.create(error.statusCode, error.message).output.payload;
-        } catch (err) {
+        } catch (e) {
             _lambdaLogger2.default.error('APPLICATION EXCEPTION', error.stack);
             error = _boom2.default.badImplementation(error.message).output.payload;
         }
