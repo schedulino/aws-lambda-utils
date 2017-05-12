@@ -5,24 +5,47 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.handleError = exports.handleUnrecognizedOperation = exports.respond = undefined;
 
-let respond = (() => {
-    var _ref = _asyncToGenerator(function* (event, context, spec) {
-        try {
-            if (spec.validate) {
-                validateInput(event, spec.validate);
-            }
+var respond = function () {
+    var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(event, context, spec) {
+        var data;
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+            while (1) {
+                switch (_context.prev = _context.next) {
+                    case 0:
+                        _context.prev = 0;
 
-            const data = yield spec.handler();
-            context.succeed(data);
-        } catch (error) {
-            context.fail(handleError(error));
-        }
-    });
+                        if (spec.validate) {
+                            validateInput(event, spec.validate);
+                        }
+
+                        _context.next = 4;
+                        return spec.handler();
+
+                    case 4:
+                        data = _context.sent;
+
+                        context.succeed(data);
+                        _context.next = 11;
+                        break;
+
+                    case 8:
+                        _context.prev = 8;
+                        _context.t0 = _context['catch'](0);
+
+                        context.fail(handleError(_context.t0));
+
+                    case 11:
+                    case 'end':
+                        return _context.stop();
+                }
+            }
+        }, _callee, this, [[0, 8]]);
+    }));
 
     return function respond(_x, _x2, _x3) {
         return _ref.apply(this, arguments);
     };
-})();
+}();
 
 var _joi = require('joi');
 
@@ -77,11 +100,11 @@ function handleError(error) {
  * @api private
  */
 function validateInput(event, validate) {
-    const props = Object.keys(validate);
+    var props = Object.keys(validate);
 
-    for (let i = 0; i < props.length; i += 1) {
-        const prop = props[i];
-        const error = _joi2.default.validate(event[prop], validate[prop]).error;
+    for (var i = 0; i < props.length; i += 1) {
+        var prop = props[i];
+        var error = _joi2.default.validate(event[prop], validate[prop]).error;
 
         if (error) {
             throw _boom2.default.badRequest(error);
@@ -90,7 +113,7 @@ function validateInput(event, validate) {
 }
 
 function handleUnrecognizedOperation(event, context) {
-    context.fail(handleError(_boom2.default.badRequest(`Unrecognized action command ${ event.operation }`)));
+    context.fail(handleError(_boom2.default.badRequest('Unrecognized action command ' + event.operation)));
 }
 
 exports.respond = respond;
