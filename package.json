@@ -41,9 +41,9 @@
     "audit"
   ],
   "dependencies": {
-    "joi": "10.4.1",
+    "joi": "10.4.2",
     "boom": "4.3.1",
-    "@schedulino/lambda-logger": "^0.0.11"
+    "@schedulino/lambda-logger": "0.0.11"
   },
   "devDependencies": {
     "babel-cli": "6.24.1",
