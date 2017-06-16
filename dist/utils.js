@@ -32,9 +32,9 @@ var _boom = require('boom');
 
 var _boom2 = _interopRequireDefault(_boom);
 
-var _lambdaLogger = require('@schedulino/lambda-logger');
+var _lambdaLog = require('lambda-log');
 
-var _lambdaLogger2 = _interopRequireDefault(_lambdaLogger);
+var _lambdaLog2 = _interopRequireDefault(_lambdaLog);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -58,7 +58,7 @@ function handleError(error) {
             error = JSON.parse(error.message);
             error = _boom2.default.create(error.statusCode, error.message).output.payload;
         } catch (e) {
-            _lambdaLogger2.default.error('APPLICATION EXCEPTION', error.stack);
+            _lambdaLog2.default.error('APPLICATION EXCEPTION', error.stack);
             error = _boom2.default.badImplementation(error.message).output.payload;
         }
     } else {
