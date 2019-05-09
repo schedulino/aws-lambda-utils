@@ -54,8 +54,7 @@ function validateInput(event, validate) {
         const prop = props[i];
         // FIXME: what type is error
         // tslint:disable-next-line:no-any
-        const error = joi_1.default.validate(event[prop], validate[prop])
-            // tslint:disable-next-line:no-any
+        const error = joi_1.default.validate(event[prop], validate[prop]) // tslint:disable-next-line:no-any
             .error;
         if (error) {
             throw boom_1.default.badRequest(error);

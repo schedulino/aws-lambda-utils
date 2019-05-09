@@ -36,13 +36,12 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run build && lint-staged",
+      "pre-commit": "npm run build && npm run lint:fix && lint-staged",
       "post-merge": "npm install"
     }
   },
   "lint-staged": {
     "*.{ts,md}": [
-      "npm run lint:fix",
       "npm run prettier:fix",
       "git add"
     ]
