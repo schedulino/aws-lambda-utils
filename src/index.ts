@@ -4,9 +4,11 @@
  * @license   GPL-3.0
  */
 import Boom from '@hapi/boom';
-import Joi from '@hapi/joi';
-import { APIGatewayEvent, Context } from 'aws-lambda';
+import Joi, { ValidationError } from '@hapi/joi';
+import { APIGatewayEvent } from 'aws-lambda';
 import { LambdaLog } from 'lambda-log';
+
+export { default as Boom } from '@hapi/boom';
 
 export const logger = new LambdaLog({
   debug: process.env.LOGGER_LEVEL === 'DEBUG',
@@ -23,20 +25,42 @@ export interface Validate {
 }
 
 export interface Spec {
-  validate: Validate;
+  validate?: Validate;
   // tslint:disable-next-line:no-any
   handler: () => any;
 }
 
 export class UtilsSvc {
+  static async respond(event: SchedulinoAPIGatewayEvent, spec: Spec) {
+    try {
+      if (spec.validate) {
+        UtilsSvc.validateInput(event, spec.validate);
+      }
+
+      return await spec.handler();
+    } catch (error) {
+      throw UtilsSvc.handleError(error);
+    }
+  }
+
+  static handleUnrecognizedOperation(event: SchedulinoAPIGatewayEvent) {
+    throw UtilsSvc.handleError(
+      Boom.badRequest(`Unrecognized action command ${event.cmd}`)
+    );
+  }
+
   /**
    * This is custom app error handler.
    */
-  static handleError(error: Boom | Error): string {
+  private static handleError(error: Boom | Error): Error {
     let boomPayload: Boom.Payload;
 
     if (Boom.isBoom(error)) {
       boomPayload = error.output.payload;
+      if (error.data) {
+        // tslint:disable-next-line:no-any
+        (boomPayload as any).data = error.data;
+      }
     } else if (error instanceof Error) {
       try {
         // if the error comes from another invoked-lambda we need to
@@ -55,35 +79,7 @@ export class UtilsSvc {
       boomPayload = Boom.badImplementation().output.payload;
     }
 
-    return JSON.stringify(boomPayload);
-  }
-
-  static async respond(
-    event: SchedulinoAPIGatewayEvent,
-    context: Context,
-    spec: Spec
-  ) {
-    try {
-      if (spec.validate) {
-        UtilsSvc.validateInput(event, spec.validate);
-      }
-
-      const data = await spec.handler();
-      context.succeed(data);
-    } catch (error) {
-      context.fail(UtilsSvc.handleError(error));
-    }
-  }
-
-  static handleUnrecognizedOperation(
-    event: SchedulinoAPIGatewayEvent,
-    context: Context
-  ) {
-    context.fail(
-      UtilsSvc.handleError(
-        Boom.badRequest(`Unrecognized action command ${event.cmd}`)
-      )
-    );
+    return new Error(JSON.stringify(boomPayload));
   }
 
   /**
@@ -97,13 +93,21 @@ export class UtilsSvc {
 
     for (let i = 0; i < props.length; i += 1) {
       const prop = props[i];
-      // FIXME: what type is error
       // tslint:disable-next-line:no-any
-      const error = Joi.validate((event as any)[prop], validate[prop]) // tslint:disable-next-line:no-any
-        .error as any;
+      const error: ValidationError = Joi.validate(
+        (event as any)[prop],
+        validate[prop],
+        { abortEarly: false }
+      ).error;
 
       if (error) {
-        throw Boom.badRequest(error);
+        throw Boom.badRequest(
+          error.details[0].message,
+          error.details.map(detail => ({
+            message: detail.message.replace(/['"]/g, ''),
+            type: detail.type,
+          }))
+        );
       }
     }
   }

@@ -1,9 +1,10 @@
 {
   "name": "@schedulino/utils-svc",
   "version": "0.0.1",
-  "description": "Schedulino utilities for services",
+  "description": "Schedulino utilities for serverless services",
   "license": "GPL-3.0",
-  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "author": {
     "email": "support@schedulino.com",
     "name": "Schedulino Team",
@@ -24,46 +25,69 @@
     "url": "https://github.com/schedulino/schedulino-utils/issues"
   },
   "homepage": "https://github.com/schedulino/schedulino-utils#readme",
-  "main": "index.js",
   "scripts": {
+    "cm": "git-cz add .",
+    "prebuild": "rimraf dist",
     "build": "tsc --declaration",
-    "lint": "tslint -t stylish --project \"tsconfig.json\"",
+    "lint": "tslint -t stylish --project tsconfig.json",
     "lint:fix": "npm run lint -- --fix",
     "check": "npm run lint && npm run prettier:check",
-    "prettier:base-files": "prettier --single-quote --trailing-comma es5 \"**/*.ts\"",
+    "prettier:base-files": "prettier --single-quote --trailing-comma es5 \"./src/**/*.ts\"",
     "prettier:check": "npm run prettier:base-files -- -l",
-    "prettier:fix": "npm run prettier:base-files -- --write"
+    "prettier:fix": "npm run prettier:base-files -- --write",
+    "test": "jest --config jestconfig.json",
+    "test:coverage": "npm run test -- --coverage",
+    "test:watch": "npm run test:coverage -- --watch",
+    "test:prod": "npm run test:coverage -- --no-cache"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run build && npm run lint:fix && lint-staged",
+      "pre-commit": "npm run build && lint-staged",
+      "pre-push": "npm run test:prod",
       "post-merge": "npm install"
     }
   },
   "lint-staged": {
     "*.{ts,md}": [
+      "npm run lint:fix",
       "npm run prettier:fix",
       "git add"
     ]
   },
-  "peerDependencies": {
-    "@hapi/joi": "^15.0.2",
-    "@hapi/boom": "^7.4.2",
-    "lambda-log": "^2.2.0"
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "dependencies": {
+    "@hapi/joi": "15.0.2",
+    "@hapi/boom": "7.4.2",
+    "lambda-log": "2.2.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.23",
+    "@types/aws-lambda": "8.10.25",
     "@types/hapi__boom": "7.4.0",
     "@types/hapi__joi": "15.0.1",
+    "@types/jest": "24.0.12",
     "@types/lambda-log": "2.0.1",
+    "commitizen": "^3.1.1",
+    "cz-conventional-changelog": "^2.1.0",
     "husky": "2.2.0",
+    "jest": "24.8.0",
     "lint-staged": "8.1.6",
     "prettier": "1.17.0",
+    "rimraf": "2.6.3",
+    "ts-jest": "24.0.2",
     "tslint": "5.16.0",
     "tslint-config-airbnb": "5.11.1",
     "tslint-config-prettier": "1.18.0",
     "typescript": "3.4.5"
   },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
   "engines": {
     "node": ">=8.0.0",
     "npm": ">=5.0.0"
