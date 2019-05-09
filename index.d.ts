@@ -6,6 +6,8 @@
  */
 import Boom from '@hapi/boom';
 import { APIGatewayEvent, Context } from 'aws-lambda';
+import { LambdaLog } from 'lambda-log';
+export declare const logger: LambdaLog;
 export interface SchedulinoAPIGatewayEvent extends APIGatewayEvent {
   principalId: string;
   cmd: string;
@@ -17,14 +19,22 @@ export interface Spec {
   validate: Validate;
   handler: () => any;
 }
-declare function handleError(error: Boom | Error): string;
-declare function respond(
-  event: SchedulinoAPIGatewayEvent,
-  context: Context,
-  spec: Spec
-): Promise<void>;
-declare function handleUnrecognizedOperation(
-  event: SchedulinoAPIGatewayEvent,
-  context: Context
-): void;
-export { respond, handleUnrecognizedOperation, handleError };
+export declare class UtilsSvc {
+  /**
+   * This is custom app error handler.
+   */
+  static handleError(error: Boom | Error): string;
+  static respond(
+    event: SchedulinoAPIGatewayEvent,
+    context: Context,
+    spec: Spec
+  ): Promise<void>;
+  static handleUnrecognizedOperation(
+    event: SchedulinoAPIGatewayEvent,
+    context: Context
+  ): void;
+  /**
+   * Validates event data with the defined validation schema.
+   */
+  private static validateInput;
+}
