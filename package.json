@@ -26,7 +26,7 @@
   },
   "homepage": "https://github.com/schedulino/schedulino-utils#readme",
   "scripts": {
-    "cm": "git-cz add .",
+    "cm": "git-cz",
     "prebuild": "rimraf dist",
     "build": "tsc --declaration",
     "lint": "tslint -t stylish --project tsconfig.json",
@@ -42,16 +42,29 @@
   },
   "husky": {
     "hooks": {
+      "prepare-commit-msg": "exec < /dev/tty && git cz --hook",
       "pre-commit": "npm run build && lint-staged",
       "pre-push": "npm run test:prod",
       "post-merge": "npm install"
     }
   },
   "lint-staged": {
-    "*.{ts,md}": [
-      "npm run lint:fix",
-      "npm run prettier:fix",
-      "git add"
+    "linters": {
+      "*.ts": [
+        "npm run lint:fix",
+        "git add"
+      ],
+      "*.{ts,md,json}": [
+        "npm run prettier:fix",
+        "git add"
+      ]
+    },
+    "concurrent": false,
+    "relative": true,
+    "ignore": [
+      "node_modules",
+      "dist",
+      "package-lock.json"
     ]
   },
   "config": {
@@ -84,7 +97,7 @@
     "typescript": "3.4.5"
   },
   "files": [
-    "dist/",
+    "dist/src/",
     "README.md",
     "LICENSE"
   ],

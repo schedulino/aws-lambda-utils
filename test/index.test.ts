@@ -3,10 +3,10 @@ import Joi from '@hapi/joi';
 
 import { logger, SchedulinoAPIGatewayEvent, UtilsSvc } from '../src';
 
-// tslint:disable-next-line:no-any
 const event = {
   cmd: 'test',
   principalId: 'principalId',
+  // tslint:disable-next-line:no-any
   path: { id: 'id', uuid: 'uuid' } as any,
 } as SchedulinoAPIGatewayEvent;
 
@@ -56,9 +56,9 @@ describe('respond', () => {
         })
       );
 
-      // tslint:disable-next-line:no-any
       return expect(
         UtilsSvc.respond(
+          // tslint:disable-next-line:no-any
           { principalId: 'principalId', path: { id: true } } as any,
           {
             validate: validateSchema.findOne,

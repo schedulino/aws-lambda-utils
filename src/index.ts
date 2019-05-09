@@ -93,8 +93,8 @@ export class UtilsSvc {
 
     for (let i = 0; i < props.length; i += 1) {
       const prop = props[i];
-      // tslint:disable-next-line:no-any
       const error: ValidationError = Joi.validate(
+        // tslint:disable-next-line:no-any
         (event as any)[prop],
         validate[prop],
         { abortEarly: false }
