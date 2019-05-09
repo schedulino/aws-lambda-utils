@@ -1,7 +1,7 @@
 {
-  "name": "schedulino-utils",
+  "name": "@schedulino/utils-svc",
   "version": "0.0.1",
-  "description": "Schedulino project utilities.",
+  "description": "Schedulino utilities for services",
   "license": "GPL-3.0",
   "private": true,
   "author": {
@@ -42,6 +42,7 @@
   },
   "lint-staged": {
     "*.{ts,md}": [
+      "npm run lint:fix",
       "npm run prettier:fix",
       "git add"
     ]
