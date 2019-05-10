@@ -17,11 +17,10 @@ jobs:
 #      skip_cleanup: true
     - stage: release
       node_js: lts/*
-#      script: skip     # usually you do not want to rerun any tests
+      script: npm run build     # usually you do not want to rerun any tests
       deploy:
         provider: script
         skip_cleanup: true
         script:
-          - npm run build
           - npx semantic-release
       if: branch = master
