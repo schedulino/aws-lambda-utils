@@ -1,10 +1,10 @@
 {
   "name": "@schedulino/utils-svc",
-  "version": "0.0.1",
+  "version": "0.0.0-development",
   "description": "Schedulino utilities for serverless services",
   "license": "GPL-3.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "author": {
     "email": "support@schedulino.com",
     "name": "Schedulino Team",
@@ -19,7 +19,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/schedulino/schedulino-utils.git"
+    "url": "https://github.com/schedulino/schedulino-utils.git"
   },
   "bugs": {
     "url": "https://github.com/schedulino/schedulino-utils/issues"
@@ -38,7 +38,8 @@
     "test": "jest --config jestconfig.json",
     "test:coverage": "npm run test -- --coverage",
     "test:watch": "npm run test:coverage -- --watch",
-    "test:prod": "npm run test:coverage -- --no-cache"
+    "test:prod": "npm run test:coverage -- --no-cache",
+    "semantic-release": "semantic-release"
   },
   "husky": {
     "hooks": {
@@ -84,12 +85,13 @@
     "@types/jest": "24.0.12",
     "@types/lambda-log": "2.0.1",
     "commitizen": "^3.1.1",
-    "cz-conventional-changelog": "^2.1.0",
+    "cz-conventional-changelog": "2.1.0",
     "husky": "2.2.0",
     "jest": "24.8.0",
     "lint-staged": "8.1.6",
     "prettier": "1.17.0",
     "rimraf": "2.6.3",
+    "semantic-release": "15.13.12",
     "ts-jest": "24.0.2",
     "tslint": "5.16.0",
     "tslint-config-airbnb": "5.11.1",
