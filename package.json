@@ -42,8 +42,8 @@
   },
   "husky": {
     "hooks": {
+      "pre-commit": "lint-staged",
       "prepare-commit-msg": "exec < /dev/tty && git cz --hook",
-      "pre-commit": "npm run build && lint-staged",
       "pre-push": "npm run test:prod",
       "post-merge": "npm install"
     }
