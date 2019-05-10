@@ -1,6 +1,6 @@
 {
   "name": "@schedulino/utils-svc",
-  "version": "0.0.0-development",
+  "version": "0.0.0-semantically-released",
   "description": "Schedulino utilities for serverless services",
   "license": "GPL-3.0",
   "main": "dist/src/index.js",
