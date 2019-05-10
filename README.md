@@ -1,5 +1,7 @@
 # Schedulino Utils Svc
 
+[![Travis build badge](https://img.shields.io/travis/schedulino/schedulino-utils.svg)](https://travis-ci.org/schedulino/schedulino-utils.svg?branch=master)
+
 Schedulino utilities for serverless services.
 
 ## NPM scripts

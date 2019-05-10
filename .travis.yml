@@ -12,12 +12,12 @@ jobs:
     - stage: install
       script: npm install
       skip_cleanup: true
-    - stage: lint
-      script: npm run check
-      skip_cleanup: true
-    - stage: test
-      script: npm run test:prod
-      skip_cleanup: true
+#    - stage: lint
+#      script: npm run check
+#      skip_cleanup: true
+#    - stage: test
+#      script: npm run test:prod
+#      skip_cleanup: true
     - stage: build
       script: npm run build
       skip_cleanup: true
