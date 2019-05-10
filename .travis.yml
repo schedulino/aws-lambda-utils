@@ -9,25 +9,22 @@ node_js:
 
 jobs:
   include:
-    - stage: install
-      script: npm install
+#    - stage: install
+#      script: npm ci
+#      skip_cleanup: true
+    - stage: lint
+      script: npm run check
       skip_cleanup: true
-#    - stage: lint
-#      script: npm run check
-#      skip_cleanup: true
-#    - stage: test
-#      script: npm run test:prod
-#      skip_cleanup: true
-    - stage: build
-      script: npm run build
+    - stage: test
+      script: npm run test:prod
       skip_cleanup: true
     - stage: release
       node_js: lts/*
-      # Advanced: optionally overwrite your default `script` step to skip the tests
-      # script: skip
+      script: skip     # usually you do not want to rerun any tests
       deploy:
         provider: script
         skip_cleanup: true
         script:
+          - npm run build
           - npx semantic-release
       if: branch = master
