@@ -9,18 +9,15 @@ node_js:
 
 jobs:
   include:
-#    - stage: install
-#      script: npm ci
+#    - stage: lint
+#      script: npm run check
 #      skip_cleanup: true
-    - stage: lint
-      script: npm run check
-      skip_cleanup: true
-    - stage: test
-      script: npm run test:prod
-      skip_cleanup: true
+#    - stage: test
+#      script: npm run test:prod
+#      skip_cleanup: true
     - stage: release
       node_js: lts/*
-      script: skip     # usually you do not want to rerun any tests
+#      script: skip     # usually you do not want to rerun any tests
       deploy:
         provider: script
         skip_cleanup: true
