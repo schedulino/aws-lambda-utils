@@ -13,13 +13,21 @@ export const logger = new LambdaLog({
   debug: process.env.LOGGER_LEVEL === 'DEBUG',
 });
 
-// export interface SchedulinoAPIGatewayEvent extends APIGatewayEvent {
-//   principalId: string;
-//   cmd: string;
-// }
-
 const headers = {
   'Access-Control-Allow-Origin': '*', // This is required to make CORS work with AWS API Gateway Proxy Integration.
+};
+
+export const HttpStatusCode = {
+  Ok: 200,
+  Created: 201,
+  NoContent: 204,
+};
+
+export const HttpMethod = {
+  Delete: 'DELETE',
+  Get: 'GET',
+  Post: 'POST',
+  Update: 'UPDATE',
 };
 
 export class UtilsSvc {
