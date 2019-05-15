@@ -12,11 +12,11 @@ export { default as Boom } from '@hapi/boom';
 export const logger = new LambdaLog({
   debug: process.env.LOGGER_LEVEL === 'DEBUG',
 });
-//
-// export interface SchedulinoAPIGatewayEvent extends APIGatewayEvent {
-//   principalId: string;
-//   cmd: string;
-// }
+
+export interface SchedulinoAPIGatewayEvent extends APIGatewayEvent {
+  principalId: string;
+  cmd: string;
+}
 
 const headers = {
   'Access-Control-Allow-Origin': '*', // This is required to make CORS work with AWS API Gateway Proxy Integration.
