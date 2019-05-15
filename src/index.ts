@@ -4,8 +4,7 @@
  * @license   GPL-3.0
  */
 import Boom from '@hapi/boom';
-import Joi, { ValidationError } from '@hapi/joi';
-import { APIGatewayEvent } from 'aws-lambda';
+import { APIGatewayEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { LambdaLog } from 'lambda-log';
 
 export { default as Boom } from '@hapi/boom';
@@ -13,46 +12,57 @@ export { default as Boom } from '@hapi/boom';
 export const logger = new LambdaLog({
   debug: process.env.LOGGER_LEVEL === 'DEBUG',
 });
+//
+// export interface SchedulinoAPIGatewayEvent extends APIGatewayEvent {
+//   principalId: string;
+//   cmd: string;
+// }
 
-export interface SchedulinoAPIGatewayEvent extends APIGatewayEvent {
-  principalId: string;
-  cmd: string;
-}
-
-export interface Validate {
-  // tslint:disable-next-line:no-any
-  [name: string]: any;
-}
-
-export interface Spec {
-  validate?: Validate;
-  // tslint:disable-next-line:no-any
-  handler: () => any;
-}
+const headers = {
+  'Access-Control-Allow-Origin': '*', // This is required to make CORS work with AWS API Gateway Proxy Integration.
+};
 
 export class UtilsSvc {
-  static async respond(event: SchedulinoAPIGatewayEvent, spec: Spec) {
+  static async responseBuilder(
+    fn: Function,
+    statusCode?: number
+  ): Promise<APIGatewayProxyResult> {
     try {
-      if (spec.validate) {
-        UtilsSvc.validateInput(event, spec.validate);
-      }
-
-      return await spec.handler();
+      return {
+        headers,
+        body: JSON.stringify(await fn()),
+        statusCode: statusCode || 200,
+      };
     } catch (error) {
-      throw UtilsSvc.handleError(error);
+      return UtilsSvc.handleError(error);
     }
   }
 
-  static handleUnrecognizedOperation(event: SchedulinoAPIGatewayEvent) {
-    throw UtilsSvc.handleError(
-      Boom.badRequest(`Unrecognized action command ${event.cmd}`)
+  // static async respond(event: SchedulinoAPIGatewayEvent, spec: Spec) {
+  //   try {
+  //     if (spec.validate) {
+  //       UtilsSvc.validateInput(event, spec.validate);
+  //     }
+  //
+  //
+  //     return await spec.handler();
+  //   } catch (error) {
+  //     throw UtilsSvc.handleError(error);
+  //   }
+  // }
+
+  static handleUnrecognizedOperation(
+    event: APIGatewayEvent
+  ): APIGatewayProxyResult {
+    return UtilsSvc.handleError(
+      Boom.badRequest(`Unrecognized action command ${event.resource}`)
     );
   }
 
   /**
    * This is custom app error handler.
    */
-  private static handleError(error: Boom | Error): Error {
+  private static handleError(error: Boom | Error): APIGatewayProxyResult {
     let boomPayload: Boom.Payload;
 
     if (Boom.isBoom(error)) {
@@ -79,36 +89,40 @@ export class UtilsSvc {
       boomPayload = Boom.badImplementation().output.payload;
     }
 
-    return new Error(JSON.stringify(boomPayload));
+    return {
+      headers,
+      body: JSON.stringify(boomPayload),
+      statusCode: boomPayload.statusCode,
+    };
   }
 
   /**
    * Validates event data with the defined validation schema.
    */
-  private static validateInput(
-    event: SchedulinoAPIGatewayEvent,
-    validate: Validate
-  ) {
-    const props = Object.keys(validate);
-
-    for (let i = 0; i < props.length; i += 1) {
-      const prop = props[i];
-      const error: ValidationError = Joi.validate(
-        // tslint:disable-next-line:no-any
-        (event as any)[prop],
-        validate[prop],
-        { abortEarly: false }
-      ).error;
-
-      if (error) {
-        throw Boom.badRequest(
-          error.details[0].message,
-          error.details.map(detail => ({
-            message: detail.message.replace(/['"]/g, ''),
-            type: detail.type,
-          }))
-        );
-      }
-    }
-  }
+  // private static validateInput(
+  //   event: SchedulinoAPIGatewayEvent,
+  //   validate: Validate
+  // ) {
+  //   const props = Object.keys(validate);
+  //
+  //   for (let i = 0; i < props.length; i += 1) {
+  //     const prop = props[i];
+  //     const error: ValidationError = Joi.validate(
+  //       // tslint:disable-next-line:no-any
+  //       (event as any)[prop],
+  //       validate[prop],
+  //       { abortEarly: false }
+  //     ).error;
+  //
+  //     if (error) {
+  //       throw Boom.badRequest(
+  //         error.details[0].message,
+  //         error.details.map(detail => ({
+  //           message: detail.message.replace(/['"]/g, ''),
+  //           type: detail.type,
+  //         }))
+  //       );
+  //     }
+  //   }
+  // }
 }
