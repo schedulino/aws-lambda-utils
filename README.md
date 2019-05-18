@@ -1,8 +1,14 @@
-# Schedulino Utils Svc
+# aws-lambda-utils
 
-[![Build Status](https://travis-ci.org/schedulino/schedulino-utils.svg?branch=master)](https://travis-ci.org/schedulino/schedulino-utils)
+[![Build Status](https://travis-ci.org/schedulino/aws-lambda-utils.svg?branch=master)](https://travis-ci.org/schedulino/aws-lambda-utils)
 
 Schedulino utilities for AWS lambda services.
+
+## Installation
+
+```
+$ npm install --save @schedulino/aws-lambda-utils
+```
 
 ## NPM scripts
 
