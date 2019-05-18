@@ -49,5 +49,6 @@ pids
 *.seed
 
 # Custom
-.idea/
 .env
+.serverless
+.webpack

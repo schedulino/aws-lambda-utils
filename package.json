@@ -1,7 +1,7 @@
 {
-  "name": "@schedulino/utils-svc",
+  "name": "@schedulino/lambda-utils",
   "version": "0.0.0-semantically-released",
-  "description": "Schedulino utilities for serverless services",
+  "description": "Schedulino lambda utilities for serverless services",
   "license": "GPL-3.0",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -32,7 +32,7 @@
     "lint": "tslint -t stylish --project tsconfig.json",
     "lint:fix": "npm run lint -- --fix",
     "check": "npm run lint && npm run prettier:check",
-    "prettier:base-files": "prettier --single-quote --trailing-comma es5 \"./src/**/*.ts\"",
+    "prettier:base-files": "prettier --single-quote --trailing-comma es5 ./src/**/*.ts",
     "prettier:check": "npm run prettier:base-files -- -l",
     "prettier:fix": "npm run prettier:base-files -- --write",
     "test": "jest --config jestconfig.json",
@@ -45,6 +45,7 @@
     "hooks": {
       "pre-commit": "lint-staged",
       "prepare-commit-msg": "exec < /dev/tty && git cz --hook",
+      "pre-push": "npm run test:ci",
       "post-merge": "npm install"
     }
   },
@@ -78,12 +79,13 @@
     "lambda-log": "2.2.0"
   },
   "devDependencies": {
+    "@schedulino/aws-lambda-test-utils": "latest",
     "@types/aws-lambda": "8.10.25",
     "@types/hapi__boom": "7.4.0",
     "@types/hapi__joi": "15.0.1",
     "@types/jest": "24.0.12",
     "@types/lambda-log": "2.0.1",
-    "commitizen": "^3.1.1",
+    "commitizen": "3.1.1",
     "cz-conventional-changelog": "2.1.0",
     "husky": "2.2.0",
     "jest": "24.8.0",

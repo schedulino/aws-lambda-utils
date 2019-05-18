@@ -4,17 +4,30 @@
  * @license   GPL-3.0
  */
 import Boom from '@hapi/boom';
-import { APIGatewayEvent, APIGatewayProxyResult } from 'aws-lambda';
+import {
+  APIGatewayEvent,
+  APIGatewayProxyHandler,
+  APIGatewayProxyResult,
+  Context,
+} from 'aws-lambda';
 import { LambdaLog } from 'lambda-log';
 
 export { default as Boom } from '@hapi/boom';
 
+// Type aliases to hide the 'aws-lambda' package and have consistent, short naming.
+export type ApiContext = Context;
+export type ApiEvent = APIGatewayEvent;
+export type ApiHandler = APIGatewayProxyHandler;
+export type ApiResponse = APIGatewayProxyResult;
+
 export const logger = new LambdaLog({
   debug: process.env.LOGGER_LEVEL === 'DEBUG',
+  dev: !!process.env.IS_OFFLINE,
 });
 
-const headers = {
-  'Access-Control-Allow-Origin': '*', // This is required to make CORS work with AWS API Gateway Proxy Integration.
+export const HttpHeader = {
+  'Access-Control-Allow-Origin': '*', // Required for CORS support to work
+  'Access-Control-Allow-Credentials': true, // Required for cookies, authorization headers with HTTPS
 };
 
 export const HttpStatusCode = {
@@ -27,7 +40,7 @@ export const HttpMethod = {
   Delete: 'DELETE',
   Get: 'GET',
   Post: 'POST',
-  Update: 'UPDATE',
+  Update: 'PUT',
 };
 
 export class UtilsSvc {
@@ -37,27 +50,14 @@ export class UtilsSvc {
   ): Promise<APIGatewayProxyResult> {
     try {
       return {
-        headers,
+        headers: HttpHeader,
         body: JSON.stringify(await fn()),
-        statusCode: statusCode || 200,
+        statusCode: statusCode || HttpStatusCode.Ok,
       };
     } catch (error) {
       return UtilsSvc.handleError(error);
     }
   }
-
-  // static async respond(event: SchedulinoAPIGatewayEvent, spec: Spec) {
-  //   try {
-  //     if (spec.validate) {
-  //       UtilsSvc.validateInput(event, spec.validate);
-  //     }
-  //
-  //
-  //     return await spec.handler();
-  //   } catch (error) {
-  //     throw UtilsSvc.handleError(error);
-  //   }
-  // }
 
   static handleUnrecognizedOperation(
     event: APIGatewayEvent
@@ -75,10 +75,6 @@ export class UtilsSvc {
 
     if (Boom.isBoom(error)) {
       boomPayload = error.output.payload;
-      if (error.data) {
-        // tslint:disable-next-line:no-any
-        (boomPayload as any).data = error.data;
-      }
     } else if (error instanceof Error) {
       try {
         // if the error comes from another invoked-lambda we need to
@@ -98,39 +94,9 @@ export class UtilsSvc {
     }
 
     return {
-      headers,
+      headers: HttpHeader,
       body: JSON.stringify(boomPayload),
       statusCode: boomPayload.statusCode,
     };
   }
-
-  /**
-   * Validates event data with the defined validation schema.
-   */
-  // private static validateInput(
-  //   event: SchedulinoAPIGatewayEvent,
-  //   validate: Validate
-  // ) {
-  //   const props = Object.keys(validate);
-  //
-  //   for (let i = 0; i < props.length; i += 1) {
-  //     const prop = props[i];
-  //     const error: ValidationError = Joi.validate(
-  //       // tslint:disable-next-line:no-any
-  //       (event as any)[prop],
-  //       validate[prop],
-  //       { abortEarly: false }
-  //     ).error;
-  //
-  //     if (error) {
-  //       throw Boom.badRequest(
-  //         error.details[0].message,
-  //         error.details.map(detail => ({
-  //           message: detail.message.replace(/['"]/g, ''),
-  //           type: detail.type,
-  //         }))
-  //       );
-  //     }
-  //   }
-  // }
 }
