@@ -86,7 +86,7 @@ export class UtilsSvc {
           statusCode: errorObj.statusCode,
         }).output.payload;
       } catch (e) {
-        logger.error('APPLICATION EXCEPTION', error.stack);
+        logger.error(error);
         boomPayload = Boom.badImplementation(error.message).output.payload;
       }
     } else {
