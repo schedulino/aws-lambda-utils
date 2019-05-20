@@ -9,6 +9,7 @@ import {
   APIGatewayProxyHandler,
   APIGatewayProxyResult,
   Context,
+  CustomAuthorizerEvent,
 } from 'aws-lambda';
 import { LambdaLog } from 'lambda-log';
 
@@ -19,6 +20,7 @@ export type ApiContext = Context;
 export type ApiEvent = APIGatewayEvent;
 export type ApiHandler = APIGatewayProxyHandler;
 export type ApiResponse = APIGatewayProxyResult;
+export type AuthorizerEvent = CustomAuthorizerEvent;
 
 export const logger = new LambdaLog({
   debug: process.env.LOGGER_LEVEL === 'DEBUG',
