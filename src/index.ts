@@ -11,9 +11,12 @@ import {
   Context,
   CustomAuthorizerEvent,
 } from 'aws-lambda';
+import { Lambda } from 'aws-sdk';
 import { LambdaLog } from 'lambda-log';
 
-export { default as Boom } from '@hapi/boom';
+import { parseAwsLambdaName } from './parser';
+
+export { Boom };
 
 // Type aliases to hide the 'aws-lambda' package and have consistent, short naming.
 export type ApiContext = Context;
@@ -21,6 +24,12 @@ export type ApiEvent = APIGatewayEvent;
 export type ApiHandler = APIGatewayProxyHandler;
 export type ApiResponse = APIGatewayProxyResult;
 export type AuthorizerEvent = CustomAuthorizerEvent;
+export interface ApiEventLambdaInvoke {
+  path: string;
+  httpMethod: string;
+  pathParameters?: { [name: string]: string };
+  requestContext: { authorizer: { principalId: string } };
+}
 
 export const logger = new LambdaLog({
   debug: process.env.LOGGER_LEVEL === 'DEBUG',
@@ -36,6 +45,7 @@ export const HttpStatusCode = {
   Ok: 200,
   Created: 201,
   NoContent: 204,
+  BadRequest: 400,
 };
 
 export const HttpMethod = {
@@ -43,7 +53,11 @@ export const HttpMethod = {
   Get: 'GET',
   Post: 'POST',
   Update: 'PUT',
+  Patch: 'PATCH',
 };
+
+// we need to export lambda instance for unit test
+export const lambda: Lambda = new Lambda();
 
 export class UtilsSvc {
   static async responseBuilder(
@@ -70,6 +84,105 @@ export class UtilsSvc {
   }
 
   /**
+   * The method calls the lambda function synchronously. This means that it will
+   * wait until the called lambda function returns a result or fails.
+   */
+  static async lambdaInvoke<T>(
+    name: string,
+    payload: ApiEventLambdaInvoke
+  ): Promise<T> {
+    const parsed = parseAwsLambdaName(name);
+
+    if (!parsed) {
+      throw Boom.badImplementation('Please provide a valid function name')
+        .output.payload;
+    }
+
+    const params: Lambda.Types.InvocationRequest = {
+      FunctionName: parsed.functionName,
+      InvocationType: 'RequestResponse',
+      Payload: JSON.stringify(payload),
+    };
+
+    if (parsed.qualifier) {
+      params.Qualifier = parsed.qualifier;
+    }
+
+    const data = (await lambda.invoke(params).promise()).Payload as string;
+    /**
+     * There are three different responses that we can expect from lambda invoke function
+     * 1. success - the lambda was invoked without error and returns APIGatewayProxyResult
+     *              in that case we just parse APIGatewayProxyResult.body
+     * 2. error - the lambda was invoked with error however the error was properly handle
+     *            by Boom in the invoked function so it returns APIGatewayProxyResult which
+     *            contains string parsed Boom error {error: '', statusCode: ''} in the
+     *            APIGatewayProxyResult.body
+     * 3. error - the lambda was invoked with error and the error was NOT handle in the
+     *            invoked function so it's exception error. The response won't contains any
+     *            APIGatewayProxyResult and instead it return string parsed error object { errorMessage: string}
+     */
+    let parsedData:
+      | APIGatewayProxyResult & { errorMessage: string }
+      | null = null;
+    let parsedBody:
+      | T & { error: string; statusCode: number } & { errorMessage: string }
+      | null = null;
+
+    try {
+      parsedData = JSON.parse(data);
+      parsedBody =
+        parsedData && parsedData.body
+          ? JSON.parse(parsedData.body)
+          : parsedData;
+    } catch (err) {}
+
+    if (parsedBody && parsedBody.errorMessage) {
+      logger.error(
+        `APPLICATION EXCEPTION FROM INVOKED LAMBDA::${
+          parsed.functionName
+        } MESSAGE::${parsedBody.errorMessage}`
+      );
+
+      throw Boom.badImplementation(parsedBody.errorMessage).output.payload;
+    }
+
+    if (parsedBody && (parsedBody.error && parsedBody.statusCode)) {
+      throw new Boom(parsedBody.error, { statusCode: parsedBody.statusCode })
+        .output.payload;
+    }
+
+    return parsedBody as T;
+  }
+
+  /**
+   * The method calls the lambda function asynchronously. This means that it will if you don't
+   * have to wait for the response of the lambda function you can use the invokeAsync method.
+   */
+  static async lambdaInvokeAsync(
+    name: string,
+    payload: ApiEventLambdaInvoke
+  ): Promise<Lambda.InvocationResponse> {
+    const parsed = parseAwsLambdaName(name);
+
+    if (!parsed) {
+      throw Boom.badImplementation('Please provide a valid function name')
+        .output.payload;
+    }
+
+    const params: Lambda.Types.InvocationRequest = {
+      FunctionName: parsed.functionName,
+      InvocationType: 'Event',
+      Payload: JSON.stringify(payload),
+    };
+
+    if (parsed.qualifier) {
+      params.Qualifier = parsed.qualifier;
+    }
+
+    return await lambda.invoke(params).promise();
+  }
+
+  /**
    * This is custom app error handler.
    */
   private static handleError(error: Boom | Error): APIGatewayProxyResult {
@@ -78,19 +191,9 @@ export class UtilsSvc {
     if (Boom.isBoom(error)) {
       boomPayload = error.output.payload;
     } else if (error instanceof Error) {
-      try {
-        // if the error comes from another invoked-lambda we need to
-        // parse this error object however if the error was throw somewhere
-        // in the function e.g. exception it will contains string instead
-        // of JSON object so we handle this error in catch block
-        const errorObj: Boom.Payload = JSON.parse(error.message);
-        boomPayload = new Boom(errorObj.message, {
-          statusCode: errorObj.statusCode,
-        }).output.payload;
-      } catch (e) {
-        logger.error(error);
-        boomPayload = Boom.badImplementation(error.message).output.payload;
-      }
+      logger.error('----APPLICATION EXCEPTION----');
+      logger.error(error);
+      boomPayload = Boom.badImplementation(error.message).output.payload;
     } else {
       boomPayload = Boom.badImplementation().output.payload;
     }
