@@ -25,6 +25,7 @@ export type ApiHandler = APIGatewayProxyHandler;
 export type ApiResponse = APIGatewayProxyResult;
 export type AuthorizerEvent = CustomAuthorizerEvent;
 export interface ApiEventLambdaInvoke {
+  body?: string;
   path: string;
   httpMethod: string;
   pathParameters?: { [name: string]: string };
