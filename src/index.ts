@@ -18,6 +18,9 @@ import { parseAwsLambdaName } from './parser';
 
 export { Boom };
 
+// helper to exclude property from type https://stackoverflow.com/questions/48215950/exclude-property-from-type
+export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+
 // Type aliases to hide the 'aws-lambda' package and have consistent, short naming.
 export type ApiContext = Context;
 export type ApiEvent = APIGatewayEvent;
