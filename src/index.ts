@@ -27,11 +27,13 @@ export type ApiEvent = APIGatewayEvent;
 export type ApiHandler = APIGatewayProxyHandler;
 export type ApiResponse = APIGatewayProxyResult;
 export type AuthorizerEvent = CustomAuthorizerEvent;
+export type InvocationResponse = Lambda.InvocationResponse;
 export interface ApiEventLambdaInvoke {
   body?: string;
   path: string;
   httpMethod: string;
   pathParameters?: { [name: string]: string };
+  queryStringParameters?: { [name: string]: string };
   requestContext: { authorizer: { principalId: string } };
 }
 
@@ -195,7 +197,6 @@ export class UtilsSvc {
     if (Boom.isBoom(error)) {
       boomPayload = error.output.payload;
     } else if (error instanceof Error) {
-      logger.error('----APPLICATION EXCEPTION----');
       logger.error(error);
       boomPayload = Boom.badImplementation(error.message).output.payload;
     } else {

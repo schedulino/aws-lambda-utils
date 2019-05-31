@@ -99,7 +99,7 @@ describe('responseBuilder', () => {
       );
 
       expect(result).toEqual(expectedResult);
-      expect(logger.error).toBeCalledTimes(2);
+      expect(logger.error).toBeCalledTimes(1);
     });
 
     test('should returns 500 Internal Server Error when there is none error object', async () => {
