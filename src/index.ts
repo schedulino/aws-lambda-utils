@@ -30,7 +30,7 @@ export type AuthorizerEvent = CustomAuthorizerEvent;
 export type InvocationResponse = Lambda.InvocationResponse;
 export interface ApiEventLambdaInvoke {
   body?: string;
-  path: string;
+  resource: string;
   httpMethod: string;
   pathParameters?: { [name: string]: string };
   queryStringParameters?: { [name: string]: string };
