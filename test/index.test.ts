@@ -144,7 +144,7 @@ describe('handleUnrecognizedOperation', () => {
 
 describe('lambdaInvoke', () => {
   const eventLambdaInvoke = {
-    path: '/accounts/{id}',
+    resource: '/accounts/{id}',
     httpMethod: HttpMethod.Patch,
     pathParameters: { id: 'id' },
     requestContext: { authorizer: { principalId: 'principalID' } },
@@ -260,7 +260,7 @@ describe('lambdaInvoke', () => {
 
 describe('lambdaInvokeAsync', () => {
   const eventLambdaInvoke = {
-    path: '/accounts/{id}',
+    resource: '/accounts/{id}',
     httpMethod: HttpMethod.Patch,
     pathParameters: { id: 'id' },
     requestContext: { authorizer: { principalId: 'principalID' } },
