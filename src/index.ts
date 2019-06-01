@@ -73,7 +73,7 @@ export class UtilsSvc {
     try {
       return {
         headers: HttpHeader,
-        body: JSON.stringify(await fn()),
+        body: JSON.stringify(await fn()) || '',
         statusCode: statusCode || HttpStatusCode.Ok,
       };
     } catch (error) {

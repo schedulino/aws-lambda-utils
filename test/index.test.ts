@@ -60,6 +60,18 @@ describe('responseBuilder', () => {
     expect(result).toEqual(expectedResult);
   });
 
+  test('should return resolved data with empty string in the body', async () => {
+    expect.assertions(1);
+    const expectedResult = {
+      headers: HttpHeader,
+      body: '',
+      statusCode: 201,
+    };
+    const result = await UtilsSvc.responseBuilder(() => Promise.resolve(), 201);
+
+    expect(result).toEqual(expectedResult);
+  });
+
   describe('handleError', () => {
     beforeAll(() => {
       logger.error = jest.fn();
