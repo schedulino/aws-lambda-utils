@@ -4,6 +4,7 @@
  * @license   GPL-3.0
  */
 import Boom from '@hapi/boom';
+import * as Sentry from '@sentry/node';
 import {
   APIGatewayEvent,
   APIGatewayProxyHandler,
@@ -15,6 +16,8 @@ import { Lambda } from 'aws-sdk';
 import { LambdaLog } from 'lambda-log';
 
 import { parseAwsLambdaName } from './parser';
+
+Sentry.init({ dsn: process.env.SENTRY_DSN });
 
 export { Boom };
 
@@ -77,14 +80,14 @@ export class UtilsSvc {
         statusCode: statusCode || HttpStatusCode.Ok,
       };
     } catch (error) {
-      return UtilsSvc.handleError(error);
+      return await UtilsSvc.handleError(error);
     }
   }
 
-  static handleUnrecognizedOperation(
+  static async handleUnrecognizedOperation(
     event: APIGatewayEvent
-  ): APIGatewayProxyResult {
-    return UtilsSvc.handleError(
+  ): Promise<APIGatewayProxyResult> {
+    return await UtilsSvc.handleError(
       Boom.badRequest(`Unrecognized action command ${event.resource}`)
     );
   }
@@ -149,6 +152,9 @@ export class UtilsSvc {
         } MESSAGE::${parsedBody.errorMessage}`
       );
 
+      Sentry.captureException(parsedBody);
+      await Sentry.flush(2000);
+
       throw Boom.badImplementation(parsedBody.errorMessage).output.payload;
     }
 
@@ -191,7 +197,9 @@ export class UtilsSvc {
   /**
    * This is custom app error handler.
    */
-  private static handleError(error: Boom | Error): APIGatewayProxyResult {
+  private static async handleError(
+    error: Boom | Error
+  ): Promise<APIGatewayProxyResult> {
     let boomPayload: Boom.Payload;
 
     if (Boom.isBoom(error)) {
@@ -199,6 +207,9 @@ export class UtilsSvc {
     } else if (error instanceof Error) {
       logger.error(error);
       boomPayload = Boom.badImplementation(error.message).output.payload;
+
+      Sentry.captureException(error);
+      await Sentry.flush(2000);
     } else {
       boomPayload = Boom.badImplementation().output.payload;
     }

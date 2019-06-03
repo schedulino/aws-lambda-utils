@@ -145,12 +145,12 @@ describe('handleUnrecognizedOperation', () => {
       }),
       statusCode: 400,
     };
-    expect(
+    return expect(
       UtilsSvc.handleUnrecognizedOperation({
         ...event,
         resource: 'unrecognized-resource',
       })
-    ).toStrictEqual(error);
+    ).resolves.toStrictEqual(error);
   });
 });
 
