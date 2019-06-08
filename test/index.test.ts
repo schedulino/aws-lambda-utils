@@ -1,5 +1,10 @@
 import Boom from '@hapi/boom';
-import { apiGatewayEventMock } from '@schedulino/aws-lambda-test-utils';
+import {
+  apiGatewayEventMock,
+  contextMock,
+} from '@schedulino/aws-lambda-test-utils';
+jest.mock('@sentry/node');
+import * as Sentry from '@sentry/node';
 
 import {
   HttpHeader,
@@ -10,6 +15,8 @@ import {
   UtilsSvc,
 } from '../src';
 
+const mockedSentry = Sentry as jest.Mocked<typeof Sentry>;
+const context = contextMock();
 const event = apiGatewayEventMock();
 
 test('should contains correct HttpStatusCode', () => {
@@ -72,85 +79,207 @@ describe('responseBuilder', () => {
     expect(result).toEqual(expectedResult);
   });
 
-  describe('handleError', () => {
-    beforeAll(() => {
-      logger.error = jest.fn();
-    });
+  test('should throw the error', () => {
+    return expect(
+      UtilsSvc.responseBuilder(
+        () => Promise.reject(new Error('test error')),
+        201
+      )
+    ).rejects.toEqual(new Error('test error'));
+  });
+});
 
-    test('should handle Boom error', async () => {
-      expect.assertions(1);
-      const expectedResult = {
-        headers: HttpHeader,
-        body: JSON.stringify({
-          statusCode: 401,
-          error: 'Unauthorized',
-          message: 'Unauthorized',
-        }),
+describe('errorHandler', () => {
+  beforeAll(() => {
+    logger.error = jest.fn();
+  });
+
+  test('should return success respond', async () => {
+    expect.assertions(1);
+    const expectedResult = {
+      headers: HttpHeader,
+      body: JSON.stringify({
+        statusCode: 200,
+        message: 'success',
+      }),
+      statusCode: 200,
+    };
+    const result = await UtilsSvc.errorHandler(() =>
+      Promise.resolve(expectedResult)
+    )(event, context, () => {});
+
+    expect(result).toEqual(expectedResult);
+  });
+
+  test('should handle Boom error', async () => {
+    expect.assertions(1);
+    const expectedResult = {
+      headers: HttpHeader,
+      body: JSON.stringify({
         statusCode: 401,
-      };
-      const result = await UtilsSvc.responseBuilder(() =>
-        Promise.reject(Boom.unauthorized())
-      );
+        error: 'Unauthorized',
+        message: 'Unauthorized',
+      }),
+      statusCode: 401,
+    };
+    const result = await UtilsSvc.errorHandler(() =>
+      Promise.reject(Boom.unauthorized())
+    )(event, context, () => {});
 
-      expect(result).toEqual(expectedResult);
-    });
+    expect(result).toEqual(expectedResult);
+  });
 
-    test('should returns 500 Internal Server Error when error is type of Error', async () => {
-      expect.assertions(2);
-      const expectedResult = {
-        headers: HttpHeader,
-        body: JSON.stringify({
-          statusCode: 500,
-          error: 'Internal Server Error',
-          message: 'An internal server error occurred',
-        }),
+  test('should returns 500 Internal Server Error when error is type of Error', async () => {
+    expect.assertions(2);
+    const expectedResult = {
+      headers: HttpHeader,
+      body: JSON.stringify({
         statusCode: 500,
-      };
-      const result = await UtilsSvc.responseBuilder(() =>
-        Promise.reject(new Error('error test message'))
-      );
+        error: 'Internal Server Error',
+        message: 'An internal server error occurred',
+      }),
+      statusCode: 500,
+    };
+    const result = await UtilsSvc.errorHandler(() =>
+      Promise.reject(new Error('error test message'))
+    )(event, context, () => {});
 
-      expect(result).toEqual(expectedResult);
-      expect(logger.error).toBeCalledTimes(1);
+    expect(result).toEqual(expectedResult);
+    expect(logger.error).toBeCalledTimes(1);
+  });
+
+  test('should returns 500 Internal Server Error when there is none error object', async () => {
+    expect.assertions(1);
+    const expectedResult = {
+      headers: HttpHeader,
+      body: JSON.stringify({
+        statusCode: 500,
+        error: 'Internal Server Error',
+        message: 'An internal server error occurred',
+      }),
+      statusCode: 500,
+    };
+    const result = await UtilsSvc.errorHandler(() =>
+      Promise.reject('no-error-object')
+    )(event, context, () => {});
+
+    expect(result).toEqual(expectedResult);
+  });
+
+  describe('sentry', () => {
+    let scope: { setExtras: Function; setUser: Function; setTag: Function };
+    const expectedResult = {
+      headers: HttpHeader,
+      body: JSON.stringify(''),
+      statusCode: 200,
+    };
+
+    beforeAll(() => {
+      jest.resetAllMocks();
     });
 
-    test('should returns 500 Internal Server Error when there is none error object', async () => {
+    beforeEach(async () => {
+      mockedSentry.configureScope.mockImplementationOnce(f =>
+        f(scope as Sentry.Scope)
+      );
+      scope = {
+        setUser: jest.fn(),
+        setTag: jest.fn(),
+        setExtras: jest.fn(),
+      };
+    });
+
+    test('should set user with userId, accountId and role', async () => {
       expect.assertions(1);
-      const expectedResult = {
-        headers: HttpHeader,
-        body: JSON.stringify({
-          statusCode: 500,
-          error: 'Internal Server Error',
-          message: 'An internal server error occurred',
-        }),
-        statusCode: 500,
+
+      const requestContext = {
+        ...event.requestContext,
+        authorizer: { principalId: '124', userId: 'userID', userRole: 'admin' },
       };
-      const result = await UtilsSvc.responseBuilder(() =>
-        Promise.reject('no-error-object')
+      await UtilsSvc.errorHandler(() => Promise.resolve(expectedResult))(
+        { ...event, requestContext },
+        context,
+        () => {}
       );
 
-      expect(result).toEqual(expectedResult);
+      expect(scope.setUser).toHaveBeenCalledWith({
+        accountId: requestContext.authorizer.principalId,
+        id: requestContext.authorizer.userId,
+        role: requestContext.authorizer.userRole,
+      });
+    });
+
+    test('should set only user accountId', async () => {
+      expect.assertions(1);
+
+      const requestContext = {
+        ...event.requestContext,
+        authorizer: { principalId: '124' },
+      };
+      await UtilsSvc.errorHandler(() => Promise.resolve(expectedResult))(
+        { ...event, requestContext },
+        context,
+        () => {}
+      );
+
+      expect(scope.setUser).toHaveBeenCalledWith({
+        accountId: requestContext.authorizer.principalId,
+      });
+    });
+
+    test('should set tag', async () => {
+      expect.assertions(1);
+
+      await UtilsSvc.errorHandler(() => Promise.resolve(expectedResult))(
+        event,
+        { ...context, functionName: 'test-function' },
+        () => {}
+      );
+
+      expect(scope.setTag).toHaveBeenCalledWith('lambda', 'test-function');
+    });
+
+    test('should set extras', async () => {
+      expect.assertions(1);
+
+      const mockedContext = {
+        ...context,
+        awsRequestId: 'awsRequestId test',
+        remainingTimeInMillis: () => '10',
+        logGroupName: 'logGroupName test',
+        logStreamName: 'logStreamName test',
+        invokedFunctionArn: 'invokedFunctionArn test',
+        memoryLimitInMB: 20,
+        clientContext: undefined,
+      };
+
+      await UtilsSvc.errorHandler(() => Promise.resolve(expectedResult))(
+        event,
+        mockedContext,
+        () => {}
+      );
+
+      expect(scope.setExtras).toHaveBeenCalledWith({
+        awsRequestId: mockedContext.awsRequestId,
+        remainingTimeInMillis: mockedContext.getRemainingTimeInMillis(),
+        logGroupName: mockedContext.logGroupName,
+        logStreamName: mockedContext.logStreamName,
+        invokedFunctionArn: mockedContext.invokedFunctionArn,
+        memoryLimitInMB: mockedContext.memoryLimitInMB,
+        clientContext: mockedContext.clientContext,
+      });
     });
   });
 });
 
 describe('handleUnrecognizedOperation', () => {
   test('returns unrecognized action error message', () => {
-    const error = {
-      headers: HttpHeader,
-      body: JSON.stringify({
-        statusCode: 400,
-        error: 'Bad Request',
-        message: 'Unrecognized action command unrecognized-resource',
-      }),
-      statusCode: 400,
-    };
-    return expect(
-      UtilsSvc.handleUnrecognizedOperation({
+    expect(() =>
+      UtilsSvc.unrecognizedOperationHandler({
         ...event,
         resource: 'unrecognized-resource',
       })
-    ).resolves.toStrictEqual(error);
+    ).toThrow('Unrecognized action command unrecognized-resource');
   });
 });
 

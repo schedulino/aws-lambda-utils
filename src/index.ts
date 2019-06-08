@@ -9,6 +9,7 @@ import {
   APIGatewayEvent,
   APIGatewayProxyHandler,
   APIGatewayProxyResult,
+  Callback,
   Context,
   CustomAuthorizerEvent,
 } from 'aws-lambda';
@@ -17,7 +18,10 @@ import { LambdaLog } from 'lambda-log';
 
 import { parseAwsLambdaName } from './parser';
 
-Sentry.init({ dsn: process.env.SENTRY_DSN });
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  environment: process.env.SERVERLESS_STAGE,
+});
 
 export { Boom };
 
@@ -73,23 +77,77 @@ export class UtilsSvc {
     fn: Function,
     statusCode?: number
   ): Promise<APIGatewayProxyResult> {
-    try {
-      return {
-        headers: HttpHeader,
-        body: JSON.stringify(await fn()) || '',
-        statusCode: statusCode || HttpStatusCode.Ok,
-      };
-    } catch (error) {
-      return await UtilsSvc.handleError(error);
-    }
+    return {
+      headers: HttpHeader,
+      body: JSON.stringify(await fn()) || '',
+      statusCode: statusCode || HttpStatusCode.Ok,
+    };
   }
 
-  static async handleUnrecognizedOperation(
-    event: APIGatewayEvent
-  ): Promise<APIGatewayProxyResult> {
-    return await UtilsSvc.handleError(
-      Boom.badRequest(`Unrecognized action command ${event.resource}`)
-    );
+  static unrecognizedOperationHandler(event: APIGatewayEvent): Boom {
+    throw Boom.badRequest(`Unrecognized action command ${event.resource}`);
+  }
+
+  static errorHandler(lambdaHandlerFn: ApiHandler): ApiHandler {
+    return async (
+      event: ApiEvent,
+      context: ApiContext,
+      cb: Callback
+    ): Promise<APIGatewayProxyResult> => {
+      try {
+        Sentry.configureScope(scope => {
+          if (event.requestContext.authorizer) {
+            const {
+              principalId: accountId,
+              userId,
+              userRole,
+            } = event.requestContext.authorizer;
+
+            if (userId) {
+              scope.setUser({ accountId, id: userId, role: userRole });
+            } else {
+              scope.setUser({ accountId });
+            }
+          }
+          scope.setTag('lambda', context.functionName);
+          scope.setExtras({
+            awsRequestId: context.awsRequestId,
+            remainingTimeInMillis: context.getRemainingTimeInMillis(),
+            logGroupName: context.logGroupName,
+            logStreamName: context.logStreamName,
+            invokedFunctionArn: context.invokedFunctionArn,
+            memoryLimitInMB: context.memoryLimitInMB,
+            clientContext: context.clientContext,
+          });
+        });
+
+        return (await lambdaHandlerFn(
+          event,
+          context,
+          cb
+        )) as APIGatewayProxyResult;
+      } catch (error) {
+        let boomPayload: Boom.Payload;
+
+        if (Boom.isBoom(error)) {
+          boomPayload = error.output.payload;
+        } else if (error instanceof Error) {
+          logger.error(error);
+          boomPayload = Boom.badImplementation(error.message).output.payload;
+
+          Sentry.captureException(error);
+          await Sentry.flush(2000);
+        } else {
+          boomPayload = Boom.badImplementation().output.payload;
+        }
+
+        return {
+          headers: HttpHeader,
+          body: JSON.stringify(boomPayload),
+          statusCode: boomPayload.statusCode,
+        };
+      }
+    };
   }
 
   /**
@@ -147,9 +205,7 @@ export class UtilsSvc {
 
     if (parsedBody && parsedBody.errorMessage) {
       logger.error(
-        `APPLICATION EXCEPTION FROM INVOKED LAMBDA::${
-          parsed.functionName
-        } MESSAGE::${parsedBody.errorMessage}`
+        `APPLICATION EXCEPTION FROM INVOKED LAMBDA::${parsed.functionName} MESSAGE::${parsedBody.errorMessage}`
       );
 
       Sentry.captureException(parsedBody);
@@ -192,32 +248,5 @@ export class UtilsSvc {
     }
 
     return await lambda.invoke(params).promise();
-  }
-
-  /**
-   * This is custom app error handler.
-   */
-  private static async handleError(
-    error: Boom | Error
-  ): Promise<APIGatewayProxyResult> {
-    let boomPayload: Boom.Payload;
-
-    if (Boom.isBoom(error)) {
-      boomPayload = error.output.payload;
-    } else if (error instanceof Error) {
-      logger.error(error);
-      boomPayload = Boom.badImplementation(error.message).output.payload;
-
-      Sentry.captureException(error);
-      await Sentry.flush(2000);
-    } else {
-      boomPayload = Boom.badImplementation().output.payload;
-    }
-
-    return {
-      headers: HttpHeader,
-      body: JSON.stringify(boomPayload),
-      statusCode: boomPayload.statusCode,
-    };
   }
 }
