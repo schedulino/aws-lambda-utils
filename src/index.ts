@@ -96,7 +96,8 @@ export class UtilsSvc {
     ): Promise<APIGatewayProxyResult> => {
       try {
         Sentry.configureScope(scope => {
-          if (event.requestContext.authorizer) {
+          // make sure we check the `requestContext` as it is optional field CustomAuthorizerEvent
+          if (event.requestContext && event.requestContext.authorizer) {
             const {
               principalId: accountId,
               userId,
