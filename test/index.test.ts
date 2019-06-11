@@ -129,6 +129,17 @@ describe('errorHandler', () => {
     expect(result).toEqual(expectedResult);
   });
 
+  // TODO: this test can be removed once ASW Authorizer start support custom responses
+  test('should returns Error object when error message is Unauthorized when for Authorizer throw error', () => {
+    return expect(
+      UtilsSvc.errorHandler(() => Promise.reject(new Error('Unauthorized')))(
+        event,
+        context,
+        () => {}
+      )
+    ).rejects.toEqual(new Error('Unauthorized'));
+  });
+
   test('should returns 500 Internal Server Error when error is type of Error', async () => {
     expect.assertions(2);
     const expectedResult = {

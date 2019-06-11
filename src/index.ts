@@ -133,6 +133,11 @@ export class UtilsSvc {
         if (Boom.isBoom(error)) {
           boomPayload = error.output.payload;
         } else if (error instanceof Error) {
+          // TODO: the AWS authorization currently not support custom response only Unauthorized string message can be returned
+          if (error.message === 'Unauthorized') {
+            throw error;
+          }
+
           logger.error(error);
           boomPayload = Boom.badImplementation(error.message).output.payload;
 
