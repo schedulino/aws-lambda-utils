@@ -83,7 +83,7 @@
     "@schedulino/aws-lambda-test-utils": "latest",
     "@types/aws-lambda": "8.10.27",
     "@types/hapi__boom": "7.4.0",
-    "@types/jest": "24.0.13",
+    "@types/jest": "24.0.15",
     "@types/lambda-log": "2.2.0",
     "commitizen": "3.1.1",
     "cz-conventional-changelog": "2.1.0",
