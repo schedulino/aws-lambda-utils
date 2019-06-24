@@ -76,7 +76,7 @@
   "dependencies": {
     "@hapi/boom": "7.4.2",
     "@sentry/node": "5.4.0",
-    "aws-sdk": "2.476.0",
+    "aws-sdk": "2.480.0",
     "lambda-log": "2.2.0"
   },
   "devDependencies": {
