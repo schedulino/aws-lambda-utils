@@ -228,8 +228,8 @@ export class UtilsSvc {
     if (parsedBody && (parsedBody.error && parsedBody.statusCode)) {
       throw new Boom(parsedBody.error, {
         ...{ statusCode: parsedBody.statusCode },
-        ...(parsedBody.message ? { message: parsedBody.message } : {}),
-        ...(parsedBody.data ? { data: parsedBody.data } : {}),
+        message: parsedBody.message,
+        data: parsedBody.data,
       }).output.payload;
     }
 
