@@ -198,7 +198,12 @@ export class UtilsSvc {
       | APIGatewayProxyResult & { errorMessage: string }
       | null = null;
     let parsedBody:
-      | T & { error: string; statusCode: number } & { errorMessage: string }
+      | T & {
+          error: string;
+          statusCode: number;
+          message?: string;
+          data?: unknown;
+        } & { errorMessage: string }
       | null = null;
 
     try {
@@ -221,8 +226,11 @@ export class UtilsSvc {
     }
 
     if (parsedBody && (parsedBody.error && parsedBody.statusCode)) {
-      throw new Boom(parsedBody.error, { statusCode: parsedBody.statusCode })
-        .output.payload;
+      throw new Boom(parsedBody.error, {
+        ...{ statusCode: parsedBody.statusCode },
+        ...(parsedBody.message ? { message: parsedBody.message } : {}),
+        ...(parsedBody.data ? { data: parsedBody.data } : {}),
+      }).output.payload;
     }
 
     return parsedBody as T;
