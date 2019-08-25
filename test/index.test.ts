@@ -370,11 +370,7 @@ describe('lambdaInvoke', () => {
   });
 
   test('invoke returns error exception payload', () => {
-    const expectedResult = {
-      error: 'Internal Server Error',
-      message: 'An internal server error occurred',
-      statusCode: 500,
-    };
+    const expectedResult = Boom.badImplementation('test data');
     lambda.invoke = jest.fn().mockReturnValue({
       promise: () =>
         Promise.resolve({
@@ -390,11 +386,8 @@ describe('lambdaInvoke', () => {
   });
 
   test('invoke returns error Boom payload', () => {
-    const expectedResult = {
-      error: 'Bad Request',
-      message: 'test data',
-      statusCode: 400,
-    };
+    const expectedResult = Boom.badRequest('test data');
+
     lambda.invoke = jest.fn().mockReturnValue({
       promise: () =>
         Promise.resolve({

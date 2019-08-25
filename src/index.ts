@@ -163,7 +163,7 @@ export class UtilsSvc {
   static async lambdaInvoke<T>(
     name: string,
     payload: ApiEventLambdaInvoke
-  ): Promise<T> {
+  ): Promise<T | Boom> {
     const parsed = parseAwsLambdaName(name);
 
     if (!parsed) {
@@ -222,7 +222,7 @@ export class UtilsSvc {
       Sentry.captureException(parsedBody);
       await Sentry.flush(2000);
 
-      throw Boom.badImplementation(parsedBody.errorMessage).output.payload;
+      throw Boom.badImplementation(parsedBody.errorMessage);
     }
 
     if (parsedBody && (parsedBody.error && parsedBody.statusCode)) {
@@ -230,7 +230,7 @@ export class UtilsSvc {
         ...{ statusCode: parsedBody.statusCode },
         message: parsedBody.message,
         data: parsedBody.data,
-      }).output.payload;
+      });
     }
 
     return parsedBody as T;
