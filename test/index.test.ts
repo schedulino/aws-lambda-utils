@@ -386,13 +386,13 @@ describe('lambdaInvoke', () => {
   });
 
   test('invoke returns error Boom payload', () => {
-    const expectedResult = Boom.badRequest('test data');
+    const expectedResult = Boom.badRequest('test_data');
 
     lambda.invoke = jest.fn().mockReturnValue({
       promise: () =>
         Promise.resolve({
           Payload: JSON.stringify({
-            body: JSON.stringify({ error: 'test data', statusCode: 400 }),
+            body: JSON.stringify({ error: 'test_data', statusCode: 400 }),
           }),
         }),
     });
