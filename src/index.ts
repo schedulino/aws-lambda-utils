@@ -20,7 +20,7 @@ import { parseAwsLambdaName } from './parser';
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN || '',
-  environment: `${process.env.SERVERLESS_STAGE}`,
+  environment: process.env.SERVERLESS_STAGE,
 });
 
 export { Boom };
