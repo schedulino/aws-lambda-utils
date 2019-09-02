@@ -66,29 +66,29 @@
   },
   "dependencies": {
     "@hapi/boom": "7.4.3",
-    "@sentry/node": "5.6.1",
-    "aws-sdk": "2.512.0",
+    "@sentry/node": "5.6.2",
+    "aws-sdk": "2.521.0",
     "lambda-log": "2.3.0"
   },
   "devDependencies": {
     "@schedulino/aws-lambda-test-utils": "latest",
     "@types/aws-lambda": "8.10.31",
     "@types/hapi__boom": "7.4.1",
-    "@types/jest": "24.0.17",
+    "@types/jest": "24.0.18",
     "@types/lambda-log": "2.2.0",
     "commitizen": "4.0.3",
     "cz-conventional-changelog": "3.0.2",
-    "husky": "3.0.4",
+    "husky": "3.0.5",
     "jest": "24.9.0",
-    "lint-staged": "9.2.3",
+    "lint-staged": "9.2.5",
     "prettier": "1.18.2",
     "rimraf": "3.0.0",
-    "semantic-release": "15.13.21",
+    "semantic-release": "15.13.24",
     "ts-jest": "24.0.2",
-    "tslint": "5.18.0",
+    "tslint": "5.19.0",
     "tslint-config-airbnb": "5.11.1",
     "tslint-config-prettier": "1.18.0",
-    "typescript": "3.5.3"
+    "typescript": "3.6.2"
   },
   "files": [
     "dist/src/",
