@@ -19,7 +19,7 @@ import { LambdaLog } from 'lambda-log';
 import { parseAwsLambdaName } from './parser';
 
 Sentry.init({
-  dsn: `${process.env.SENTRY_DSN}`,
+  dsn: process.env.SENTRY_DSN || '',
   environment: `${process.env.SERVERLESS_STAGE}`,
 });
 
